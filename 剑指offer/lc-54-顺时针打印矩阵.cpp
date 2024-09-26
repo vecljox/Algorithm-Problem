@@ -1,5 +1,4 @@
 class Solution {
-    vector<int> res{};
 public:
     vector<int> spiralOrder(vector<vector<int>>& matrix) {
         vector<int> ans;
