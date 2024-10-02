@@ -1,3 +1,4 @@
+//堆
 class Solution {
 public:
     int findKthLargest(vector<int>& nums, int k) {
@@ -31,4 +32,34 @@ public:
     }
 
     inline int leftChild(int i) { return 2 * i + 1; }
+};
+
+//快速排序的分区方法
+class SolutionB {
+public:
+    int quickselect(vector<int>& nums, int l, int r, int k) {
+        int pivot = nums[r], i = l - 1, j = r;
+        for (;;) {
+            while (++i < j && nums[i] < pivot) {
+            }
+            while (--j > i && nums[j] > pivot) {
+            }
+            if (i < j)
+                swap(nums[i], nums[j]);
+            else
+                break;
+        }
+        swap(nums[i], nums[r]);
+        if (i < k)
+            return quickselect(nums, i + 1, r, k);
+        else if (i > k)
+            return quickselect(nums, l, i - 1, k);
+        else
+            return nums[i];
+    }
+
+    int findKthLargest(vector<int>& nums, int k) {
+        int n = nums.size();
+        return quickselect(nums, 0, n - 1, n - k);
+    }
 };
