@@ -12,9 +12,7 @@ public:
         --n;
         int num = mulk + n / d;
         int index = d - n % d;
-        while (--index) {
-            num /= 10;
-        }
+        num/=pow(10,index-1);
         return num % 10;
     }
 };
