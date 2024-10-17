@@ -2,6 +2,22 @@
 #include <stack>
 #include <vector>
 
+void quickSort(std::vector<int>& arr, int left, int right)
+{
+	if (left >= right)	return;
+	int i = left - 1;
+	int j = right + 1;
+	int p = arr[left + right >> 1];
+	while (i < j)
+	{
+		do ++i; while (arr[i] < p);
+		do --j; while (arr[j] > p);
+		if (i < j)	std::swap(arr[i], arr[j]);
+		else quickSort(arr, left, j), quickSort(arr, j + 1, right);
+	}
+}
+
+
 namespace Normal
 {
 	int partition(std::vector<int>& arr, int low, int high) {
