@@ -32,3 +32,25 @@ public:
         }
     }
 };
+
+// //findKthNumber迭代版本
+// int findKthNumber(vector<int>& nums1, int i, vector<int>& nums2, int j, int k) {
+//     while (true) {
+//         if (nums1.size() - i > nums2.size() - j) {
+//             swap(nums1, nums2);
+//             swap(i, j);
+//         }
+//         if (nums1.size() == i)
+//             return nums2[j + k - 1];
+//         if (k == 1)
+//             return min(nums1[i], nums2[j]);
+//         int si = min(i + k / 2, int(nums1.size())), sj = j + k / 2;
+//         if (nums1[si - 1] > nums2[sj - 1]) {
+//             k -= k / 2;
+//             j = sj;
+//         } else {
+//             k -= (si - i);
+//             i = si;
+//         }
+//     }
+// }
