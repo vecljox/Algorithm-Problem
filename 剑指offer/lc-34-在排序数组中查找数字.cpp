@@ -5,31 +5,25 @@ public:
         if (nums.empty())
             return {-1, -1};
         int n = nums.size();
-        int left = 0;
-        int right = n - 1;
-        while (left < right) {
-            int mid = left + (right - left) / 2;
-            if (nums[mid] >= target) {
-                right = mid;
-            } else {
-                left = mid + 1;
-            }
+        int l = 0, r = n - 1;
+        while (l < r) {
+            int mid = l + r >> 1;
+            if (nums[mid] >= target)
+                r = mid;
+            else
+                l = mid + 1;
         }
-        if (nums[left] != target)
+        if (nums[l] != target)
             return {-1, -1};
-
-        int start = left;
-
-        left = 0;
-        right = n - 1;
-        while (left < right) {
-            int mid = left + (right - left + 1) / 2;
-            if (nums[mid] <= target) {
-                left = mid;
-            } else {
-                right = mid - 1;
-            }
+        int start = l;
+        l = 0, r = n - 1;
+        while (l < r) {
+            int mid = l + r + 1 >> 1;
+            if (nums[mid] <= target)
+                l = mid;
+            else
+                r = mid - 1;
         }
-        return {start, left};
+        return {start, l};
     }
 };
