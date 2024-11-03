@@ -1,5 +1,6 @@
 #include <iostream>
-
+// 线程安全（在 C++11 及以后）
+// 自动管理生命周期，无需手动删除
 class Singleton
 {
 public:
