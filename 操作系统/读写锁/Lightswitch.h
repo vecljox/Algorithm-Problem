@@ -1,3 +1,5 @@
+// Lightswitch类似于一个房间的灯开关：第一个进入房间的人打开灯（锁定互斥量），最后一个离开的人关灯（解锁互斥量）。
+
 #pragma once
 #include <semaphore.h>
 
