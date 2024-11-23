@@ -1,4 +1,5 @@
 // 当有写者在等待时阻塞更多的读者防止写者饿死
+// 但是当写者完成后无法保证下一个唤醒的是等待的写者（若有的话），还可以优化，对写线程赋予更高优先级，具体见《The Little Book of Semaphores》中 Writer-priority readers-writers solution这一节 
 
 #include <cassert>
 #include <pthread.h>
