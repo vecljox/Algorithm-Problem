@@ -1,9 +1,10 @@
 // 当有写者在等待时阻塞更多的读者防止写者饿死
 
-#include <iostream>
+#include <cassert>
 #include <pthread.h>
 #include <semaphore.h>
-#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 struct rwlock_t {
 	pthread_mutex_t mutex;
@@ -14,7 +15,7 @@ struct rwlock_t {
 	int waiting_writers;
 };
 
-void rw_lock_init(rwlock_t* rw) {
+void rwlock_init(rwlock_t* rw) {
 	pthread_mutex_init(&rw->mutex, NULL);
 	pthread_cond_init(&rw->readers_ok, NULL);
 	pthread_cond_init(&rw->writers_ok, NULL);
@@ -63,63 +64,61 @@ void rwlock_release_writelock(rwlock_t* rw) {
 	}
 	pthread_mutex_unlock(&rw->mutex);
 }
-// 共享资源
-int shared_data = 0;
 
-// 读写锁
-rwlock_t rwlock;
+//
+// Don't change the code below (just use it!)
+// 
 
-// 模拟读操作
+int loops;
+int value = 0;
+
+rwlock_t lock;
+
 void* reader(void* arg) {
-	int id = *(int*)arg;
-	for (int i = 0; i < 50; i++) {
-		rwlock_acquire_readlock(&rwlock); // 获取读锁
-		printf("Reader %d: Read shared_data = %d\n", id, shared_data);
-		rwlock_release_readlock(&rwlock); // 释放读锁
-		usleep(100000); // 模拟读操作耗时
+	int i;
+	for (i = 0; i < loops; i++) {
+		rwlock_acquire_readlock(&lock);
+		printf("read %d\n", value);
+		rwlock_release_readlock(&lock);
 	}
 	return NULL;
 }
 
-// 模拟写操作
 void* writer(void* arg) {
-	int id = *(int*)arg;
-	for (int i = 0; i < 50; i++) {
-		rwlock_acquire_writelock(&rwlock); // 获取写锁
-		shared_data += 1; // 修改共享数据
-		printf("Writer %d: Updated shared_data to %d\n", id, shared_data);
-		rwlock_release_writelock(&rwlock); // 释放写锁
-		usleep(200000); // 模拟写操作耗时
+	int i;
+	for (i = 0; i < loops; i++) {
+		rwlock_acquire_writelock(&lock);
+		value++;
+		printf("write %d\n", value);
+		rwlock_release_writelock(&lock);
 	}
 	return NULL;
 }
 
-int main() {
-	// 初始化读写锁
-	rw_lock_init(&rwlock);
+int main(int argc, char* argv[]) {
+	assert(argc == 4);
+	int num_readers = atoi(argv[1]);
+	int num_writers = atoi(argv[2]);
+	loops = atoi(argv[3]);
 
-	// 创建线程
-	pthread_t readers[3], writers[2];
-	int reader_ids[3] = { 1, 2, 3 };
-	int writer_ids[2] = { 1, 2 };
+	pthread_t pr[num_readers], pw[num_writers];
 
-	// 启动读者线程
-	for (int i = 0; i < 3; i++) {
-		pthread_create(&readers[i], NULL, reader, &reader_ids[i]);
-	}
+	rwlock_init(&lock);
 
-	// 启动写者线程
-	for (int i = 0; i < 2; i++) {
-		pthread_create(&writers[i], NULL, writer, &writer_ids[i]);
-	}
+	printf("begin\n");
 
-	// 等待所有线程完成
-	for (int i = 0; i < 3; i++) {
-		pthread_join(readers[i], NULL);
-	}
-	for (int i = 0; i < 2; i++) {
-		pthread_join(writers[i], NULL);
-	}
+	int i;
+	for (i = 0; i < num_readers; i++)
+		pthread_create(&pr[i], NULL, reader, NULL);
+	for (i = 0; i < num_writers; i++)
+		pthread_create(&pw[i], NULL, writer, NULL);
+
+	for (i = 0; i < num_readers; i++)
+		pthread_join(pr[i], NULL);
+	for (i = 0; i < num_writers; i++)
+		pthread_join(pw[i], NULL);
+
+	printf("end: value %d\n", value);
 
 	return 0;
 }
