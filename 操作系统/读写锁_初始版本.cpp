@@ -4,35 +4,39 @@
 #include <unistd.h>
 
 typedef struct _rwlock_t {
-    sem_t lock;        // binary semaphore (basic lock)
-    sem_t writelock;   // allow ONE writer/MANY readers
-    int readers;       // #readers in critical section
+	sem_t lock;        // binary semaphore (basic lock)
+	sem_t writelock;   // allow ONE writer/MANY readers
+	int readers;       // #readers in critical section
 } rwlock_t;
 
-void rwlock_init(rwlock_t *rw) {
-    rw->readers = 0;
-    sem_init(&rw->lock, 0, 1);
-    sem_init(&rw->writelock, 0, 1);
+void rwlock_init(rwlock_t* rw) {
+	rw->readers = 0;
+	sem_init(&rw->lock, 0, 1);
+	sem_init(&rw->writelock, 0, 1);
 }
 
-void rwlock_acquire_readlock(rwlock_t *rw) {
-    sem_wait(&rw->lock);
-    rw->readers++;
-    if (rw->readers == 1) // first reader gets writelock
-        sem_wait(&rw->writelock);
-    sem_post(&rw->lock);
+void rwlock_acquire_readlock(rwlock_t* rw) {
+	sem_wait(&rw->lock);
+	rw->readers++;
+	if (rw->readers == 1) // first reader gets writelock
+		sem_wait(&rw->writelock);
+	sem_post(&rw->lock);
 }
 
-void rwlock_release_readlock(rwlock_t *rw) {
-    sem_wait(&rw->lock);
-    rw->readers--;
-    if (rw->readers == 0) // last reader lets it go
-        sem_post(&rw->writelock);
-    sem_post(&rw->lock);
+void rwlock_release_readlock(rwlock_t* rw) {
+	sem_wait(&rw->lock);
+	rw->readers--;
+	if (rw->readers == 0) // last reader lets it go
+		sem_post(&rw->writelock);
+	sem_post(&rw->lock);
 }
 
-void rwlock_acquire_writelock(rwlock_t *rw) {
-    sem_wait(&rw->writelock);
+void rwlock_acquire_writelock(rwlock_t* rw) {
+	sem_wait(&rw->writelock);
+}
+
+void rwlock_release_writelock(rwlock_t* rw) {
+	sem_post(&rw->writelock);
 }
 
 // 共享资源
@@ -68,7 +72,7 @@ void* writer(void* arg) {
 
 int main() {
 	// 初始化读写锁
-	rw_lock_init(&rwlock);
+	rwlock_init(&rwlock);
 
 	// 创建线程
 	pthread_t readers[3], writers[2];
@@ -96,6 +100,3 @@ int main() {
 	return 0;
 }
 
-void rwlock_release_writelock(rwlock_t *rw) {
-    sem_post(&rw->writelock);
-}
