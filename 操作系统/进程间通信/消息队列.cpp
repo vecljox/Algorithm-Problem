@@ -1,32 +1,38 @@
-// posix_message_queue_fork.cpp
+// parent_child_msgqueue.cpp
 #include <cstdlib>
 #include <cstring>
-#include <fcntl.h>
 #include <iostream>
-#include <mqueue.h>
-#include <sys/stat.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
-const char *QUEUE_NAME = "/my_fork_posix_queue";
-const int MAX_SIZE = 1024;
+struct message
+{
+    long mtype;
+    char mtext[100];
+};
 
 int main()
 {
-    // 定义消息队列属性
-    struct mq_attr attr;
-    attr.mq_flags = 0;          // 阻塞模式
-    attr.mq_maxmsg = 10;        // 最大消息数
-    attr.mq_msgsize = MAX_SIZE; // 单个消息的最大大小
-    attr.mq_curmsgs = 0;        // 当前消息数
+    key_t key;
+    int msgid;
 
-    // 创建消息队列
-    mqd_t mq = mq_open(QUEUE_NAME, O_CREAT | O_RDWR, 0644, &attr);
-    if (mq == (mqd_t)-1)
+    // 生成唯一键值
+    key = ftok("msgqueuefile", 65);
+    if (key == -1)
     {
-        perror("mq_open");
-        exit(1);
+        perror("ftok");
+        exit(EXIT_FAILURE);
+    }
+
+    // 创建消息队列，权限设置为0666，若不存在则创建
+    msgid = msgget(key, IPC_CREAT | 0666);
+    if (msgid == -1)
+    {
+        perror("msgget");
+        exit(EXIT_FAILURE);
     }
 
     pid_t pid = fork();
@@ -34,28 +40,26 @@ int main()
     if (pid < 0)
     {
         perror("fork");
-        mq_close(mq);
-        mq_unlink(QUEUE_NAME);
-        exit(1);
+        // 删除消息队列
+        msgctl(msgid, IPC_RMID, NULL);
+        exit(EXIT_FAILURE);
     }
 
     if (pid > 0)
     {
         // 父进程：发送消息
-        std::cout << "父进程，子进程PID：" << pid << std::endl;
+        message msg;
+        msg.mtype = 1;
 
-        // 获取用户输入的消息
-        std::cout << "请输入要发送的消息：";
-        std::string message;
-        std::getline(std::cin, message);
+        std::cout << "父进程请输入要发送的消息: ";
+        std::cin.getline(msg.mtext, sizeof(msg.mtext));
 
-        // 发送消息到队列
-        if (mq_send(mq, message.c_str(), message.size() + 1, 0) == -1)
-        { // +1 包括终止符
-            perror("mq_send");
-            mq_close(mq);
-            mq_unlink(QUEUE_NAME);
-            exit(1);
+        if (msgsnd(msgid, &msg, sizeof(msg.mtext), 0) == -1)
+        {
+            perror("msgsnd");
+            // 删除消息队列
+            msgctl(msgid, IPC_RMID, NULL);
+            exit(EXIT_FAILURE);
         }
 
         std::cout << "父进程已发送消息。\n";
@@ -63,33 +67,31 @@ int main()
         // 等待子进程结束
         wait(NULL);
 
-        // 关闭并删除消息队列
-        mq_close(mq);
-        mq_unlink(QUEUE_NAME);
+        // 删除消息队列
+        if (msgctl(msgid, IPC_RMID, NULL) == -1)
+        {
+            perror("msgctl");
+            exit(EXIT_FAILURE);
+        }
+
+        std::cout << "消息队列已删除，父进程退出。" << std::endl;
     }
     else
     {
         // 子进程：接收消息
-        std::cout << "子进程开始等待接收消息...\n";
+        message msg;
 
-        char buffer[MAX_SIZE];
-        memset(buffer, 0, sizeof(buffer));
+        std::cout << "子进程等待接收消息..." << std::endl;
 
-        // 接收消息
-        ssize_t bytes_read = mq_receive(mq, buffer, MAX_SIZE, nullptr);
-        if (bytes_read >= 0)
+        if (msgrcv(msgid, &msg, sizeof(msg.mtext), 1, 0) == -1)
         {
-            std::cout << "子进程接收到消息：" << buffer << std::endl;
-        }
-        else
-        {
-            perror("mq_receive");
+            perror("msgrcv");
+            exit(EXIT_FAILURE);
         }
 
-        // 子进程关闭消息队列
-        mq_close(mq);
+        std::cout << "子进程接收到消息: " << msg.mtext << std::endl;
 
-        exit(0);
+        exit(EXIT_SUCCESS);
     }
 
     return 0;
