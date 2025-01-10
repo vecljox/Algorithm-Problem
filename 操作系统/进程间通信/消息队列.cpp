@@ -1,4 +1,5 @@
 // parent_child_msgqueue.cpp
+// System V类的消息队列
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
