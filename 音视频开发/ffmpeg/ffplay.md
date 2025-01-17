@@ -1,3 +1,7 @@
+![image](https://github.com/user-attachments/assets/0dd18519-6738-4015-9f8c-4ccf8cabfd27)
+
+**av_read_frame返回流中的下一帧，通过AVPacket * 类型出参数将数据包放入相应的包队列中**
+
 # 整体架构
 - 初始化模块：完成参数解析、SDL 初始化、FFmpeg 初始化。
 - 解复用模块：使用 FFmpeg 的 API 提取多媒体文件中的音频、视频和字幕流。
