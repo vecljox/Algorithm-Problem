@@ -56,3 +56,4 @@ static Frame* frame_queue_peek(FrameQueue* f)
 
 所以，keep_last 是为了控制 rindex_shown 变成 1 的，而 rindex_shown 是为了实现保留上一帧在队列，还能顺利往前继续读数据的功能。
 ```
+使用keep_last 选项可以在视频播放结束后，最后一帧仍然显示在屏幕上，用户可以清晰地看到最后的场景，而不是看到黑屏或默认背景，增强用户体验。
