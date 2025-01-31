@@ -6,6 +6,9 @@
 // 具体优化思路是根据字符串列表中字符串的长度范围来限制j
 // 以及当dp[i + j]本来就是true时就不用去更新dp[i+j]了
 
+// 时间复杂度：O(n^2)    我们一共有 O(n) 个状态需要计算，每次计算需要枚举 O(n) 次，哈希表判断一个字符串是否出现在给定的字符串列表需要 O(1) 的时间，
+// 空间复杂度：O(n)      其中 n 为字符串 s 的长度。我们需要 O(n) 的空间存放 dp 值以及哈希表亦需要 O(n) 的空间复杂度，因此总空间复杂度为 O(n)。
+
 class Solution {
 public:
     bool wordBreak(string s, vector<string>& wordDict) {
